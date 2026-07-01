@@ -1,162 +1,101 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Shopping List BRB..</title>
-  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
-  <script src="https://cdn.jsdelivr.net/npm/lucide@0.263.0/dist/umd/lucide.min.js"></script>
-  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
-  <style>
-    body { font-family: 'DM Sans', sans-serif; }
-    .checked-item { opacity: 0.5; text-decoration: line-through; }
-    .dark body { background-color: #1a202c; color: #f7fafc; }
-    .dark .bg-white { background-color: #2d3748; }
-  </style>
+  <title>ShareMyList</title>
 </head>
-<body class="min-h-screen p-4 md:p-8 transition-colors duration-300">
-  <main class="max-w-lg mx-auto">
-    <header class="mb-8 text-center">
-      <h1 class="text-3xl font-bold mb-2">Shopping List</h1>
-      <p class="text-gray-600">Add, edit, sort, and share your list</p>
-    </header>
+<body>
+  <h1>ShareMyList</h1>
 
-    <!-- Controls -->
-    <div class="flex gap-2 mb-4">
-      <button onclick="toggleDarkMode()" class="canva-button px-3 py-2 rounded-lg">🌙 Dark Mode</button>
-      <button onclick="exportList()" class="canva-button px-3 py-2 rounded-lg">📤 Export</button>
-      <select id="sort-select" onchange="sortItems()" class="border rounded px-2 py-1 text-sm">
-        <option value="default">Sort by…</option>
-        <option value="alpha">Alphabetical</option>
-        <option value="checked">Checked status</option>
-        <option value="category">Category</option>
-      </select>
-    </div>
+  <!-- Input to add a new list -->
+  <input type="text" id="listTitle" placeholder="Enter list title">
+  <button onclick="addList()">Add List</button>
+  <button onclick="exportLists()">Export JSON</button>
+  <input type="file" id="importFile" accept="application/json" onchange="importLists(event)">
+  
+  <!-- Container to show lists -->
+  <h2>Lists</h2>
+  <div id="listContainer"></div>
 
-    <!-- Add form -->
-    <form id="add-form" class="flex gap-2 mb-6" onsubmit="addItem(event)">
-      <input id="name-input" type="text" placeholder="Item" class="flex-1 border rounded-lg px-3 py-2 text-sm" required>
-      <input id="qty-input" type="number" placeholder="Qty" step="0.01" min="1" class="w-20 border rounded-lg px-3 py-2 text-sm">
-      <input id="cat-input" type="text" placeholder="Category" class="w-28 border rounded-lg px-3 py-2 text-sm">
-      <button type="submit" class="canva-button px-4 py-2 rounded-lg"><i data-lucide="plus"></i></button>
-    </form>
+  <!-- Firebase + Firestore -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import { getFirestore, collection, addDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-    <!-- List -->
-    <div id="item-list" class="space-y-2"></div>
-    <p id="empty-msg" class="text-center py-8 italic">Your list is empty</p>
-    <button type="button" onclick="clearAll()" class="canva-button mt-6 w-full py-2 rounded-lg hidden">Clear All</button>
-  </main>
+    const firebaseConfig = {
+      apiKey: "AIzaSyAbx_neer7BI5SeMD0M7_kTNdhVm5qzOU0",
+      authDomain: "sharemylist-1111.firebaseapp.com",
+      projectId: "sharemylist-1111",
+      storageBucket: "sharemylist-1111.firebasestorage.app",
+      messagingSenderId: "611076330863",
+      appId: "1:611076330863:web:59b8ab413b8ca23eed449a",
+      measurementId: "G-GMRBT259X8"
+    };
 
-<script>
-let items = [];
-let nextId = 1;
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
 
-function addItem(e) {
-  e.preventDefault();
-  const name = document.getElementById('name-input').value.trim();
-  const qty = parseFloat(document.getElementById('qty-input').value) || 1;
-  const category = document.getElementById('cat-input').value.trim() || 'General';
-  if (!name) return;
-  items.push({ id: nextId++, name, qty, category, checked: false });
-  e.target.reset();
-  saveToStorage();
-  renderList();
-}
+    // Add a new list
+    async function addList() {
+      const titleInput = document.getElementById("listTitle");
+      const title = titleInput.value.trim();
+      if (!title) return;
 
-function removeItem(id) {
-  items = items.filter(i => i.id !== id);
-  saveToStorage();
-  renderList();
-}
+      await addDoc(collection(db, "lists"), {
+        title,
+        createdAt: new Date()
+      });
 
-function toggleItem(id) {
-  const item = items.find(i => i.id === id);
-  if (item) item.checked = !item.checked;
-  saveToStorage();
-  renderList();
-}
+      titleInput.value = "";
+    }
 
-function editItem(id) {
-  const item = items.find(i => i.id === id);
-  if (!item) return;
-  const newName = prompt("Edit item name:", item.name);
-  const newQty = prompt("Edit quantity:", item.qty);
-  const newCat = prompt("Edit category:", item.category);
-  if (newName) item.name = newName.trim();
-  if (newQty) item.qty = parseFloat(newQty) || item.qty;
-  if (newCat) item.category = newCat.trim();
-  saveToStorage();
-  renderList();
-}
+    // Listen for real-time updates
+    let currentLists = [];
+    function listenLists() {
+      onSnapshot(collection(db, "lists"), (snapshot) => {
+        const listContainer = document.getElementById("listContainer");
+        listContainer.innerHTML = "";
+        currentLists = [];
 
-function clearAll() {
-  items = [];
-  saveToStorage();
-  renderList();
-}
+        snapshot.docs.forEach(doc => {
+          const list = { id: doc.id, ...doc.data() };
+          currentLists.push(list);
 
-function saveToStorage() {
-  localStorage.setItem('shoppingList', JSON.stringify(items));
-}
+          const div = document.createElement("div");
+          div.textContent = list.title;
+          listContainer.appendChild(div);
+        });
+      });
+    }
 
-function loadFromStorage() {
-  const stored = localStorage.getItem('shoppingList');
-  if (stored) {
-    items = JSON.parse(stored);
-    nextId = Math.max(...items.map(i => i.id), 0) + 1;
-  }
-}
+    // Export lists as JSON file
+    function exportLists() {
+      const blob = new Blob([JSON.stringify(currentLists, null, 2)], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "sharemylist.json";
+      a.click();
+      URL.revokeObjectURL(url);
+    }
 
-function formatQty(n) {
-  return n % 1 === 0 ? n.toString() : n.toFixed(2).replace(/0+$/, '').replace(/\.$/, '');
-}
+    // Import lists from JSON file
+    async function importLists(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+      const text = await file.text();
+      const importedLists = JSON.parse(text);
 
-function sortItems() {
-  const sortBy = document.getElementById('sort-select').value;
-  if (sortBy === 'alpha') items.sort((a,b)=>a.name.localeCompare(b.name));
-  if (sortBy === 'checked') items.sort((a,b)=>a.checked - b.checked);
-  if (sortBy === 'category') items.sort((a,b)=>a.category.localeCompare(b.category));
-  renderList();
-}
+      for (const list of importedLists) {
+        await addDoc(collection(db, "lists"), {
+          title: list.title,
+          createdAt: new Date(list.createdAt || Date.now())
+        });
+      }
+    }
 
-function exportList() {
-  const text = items.map(i => `${i.name} × ${formatQty(i.qty)} [${i.category}] ${i.checked ? '✔' : ''}`).join('\n');
-  navigator.clipboard.writeText(text);
-  alert("List copied to clipboard!");
-}
-
-function toggleDarkMode() {
-  document.body.classList.toggle('dark');
-}
-
-function renderList() {
-  const container = document.getElementById('item-list');
-  const emptyMsg = document.getElementById('empty-msg');
-  const clearBtn = document.querySelector('button[onclick="clearAll()"]');
-
-  emptyMsg.classList.toggle('hidden', items.length > 0);
-  clearBtn.classList.toggle('hidden', items.length === 0);
-
-  container.innerHTML = '';
-  items.forEach(item => {
-    const div = document.createElement('div');
-    div.className = `flex items-center gap-3 p-3 rounded-lg bg-white border shadow-sm ${item.checked ? 'checked-item' : ''}`;
-    div.innerHTML = `
-      <input type="checkbox" ${item.checked ? 'checked' : ''} onchange="toggleItem(${item.id})" class="w-5 h-5 accent-teal-600 cursor-pointer">
-      <span class="flex-1 font-medium">${item.name} <span class="text-sm text-gray-500">× ${formatQty(item.qty)} (${item.category})</span></span>
-      <button onclick="editItem(${item.id})" class="text-blue-400 hover:text-blue-600"><i data-lucide="edit"></i></button>
-      <button onclick="removeItem(${item.id})" class="text-red-400 hover:text-red-600"><i data-lucide="x"></i></button>
-    `;
-    container.appendChild(div);
-  });
-  lucide.createIcons();
-}
-
-document.addEventListener('DOMContentLoaded', () => {
-  loadFromStorage();
-  lucide.createIcons();
-  renderList();
-});
-</script>
+    // Start listening
+    listenLists();
+  </script>
 </body>
 </html>
