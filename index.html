@@ -18,7 +18,7 @@
     
     <header class="mb-8 text-center relative">
       <h1 class="text-4xl font-bold mb-2 tracking-tight">Shopping List</h1>
-      <p class="text-slate-500 dark:text-slate-400">Add, edit, sort, and manage your daily essentials</p>
+      <p class="text-slate-500 dark:text-slate-400">Add, edit, sort, and share your lists instantly</p>
     </header>
 
     <div class="flex flex-wrap items-center justify-between gap-3 mb-6 bg-white dark:bg-slate-800 p-4 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700">
@@ -26,8 +26,8 @@
         <button onclick="toggleDarkMode()" id="theme-btn" class="px-3 py-2 text-sm font-medium bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:hover:bg-slate-600 rounded-lg flex items-center gap-2 transition-colors">
           <i data-lucide="moon" class="w-4 h-4"></i> <span>Dark Mode</span>
         </button>
-        <button onclick="exportList()" class="px-3 py-2 text-sm font-medium bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:hover:bg-slate-600 rounded-lg flex items-center gap-2 transition-colors">
-          <i data-lucide="share-2" class="w-4 h-4"></i> Export
+        <button onclick="shareOrExportList()" class="px-3 py-2 text-sm font-medium bg-teal-600 hover:bg-teal-700 text-white rounded-lg flex items-center gap-2 transition-colors">
+          <i data-lucide="share-2" class="w-4 h-4"></i> Share / Export
         </button>
       </div>
       
@@ -74,6 +74,7 @@
 let items = [];
 let nextId = 1;
 let editingId = null;
+const BASE_URL = "https://english-mate.github.io/Grocery/";
 
 function addItem(e) {
   e.preventDefault();
@@ -143,6 +144,32 @@ function saveToStorage() {
   localStorage.setItem('shoppingList', JSON.stringify(items));
 }
 
+function checkUrlForSharedList() {
+  const urlParams = new URLSearchParams(window.location.search);
+  const dataParam = urlParams.get('list');
+  
+  if (dataParam) {
+    try {
+      // Decode base64 to prevent URL breaks from special characters
+      const jsonString = atob(dataParam);
+      const parsedItems = JSON.parse(jsonString);
+      
+      if (Array.isArray(parsedItems) && parsedItems.length > 0) {
+        if (confirm(`You are opening a shared list with ${parsedItems.length} items. Would you like to load it? (This replaces your current local list)`)) {
+          items = parsedItems;
+          nextId = Math.max(...items.map(i => i.id), 0) + 1;
+          saveToStorage();
+          
+          // Clear query params clean up the URL bar
+          window.history.replaceState({}, document.title, window.location.pathname);
+        }
+      }
+    } catch (e) {
+      console.error("Failed to parse shared list data:", e);
+    }
+  }
+}
+
 function loadFromStorage() {
   const stored = localStorage.getItem('shoppingList');
   if (stored) {
@@ -150,7 +177,6 @@ function loadFromStorage() {
     nextId = Math.max(...items.map(i => i.id), 0) + 1;
   }
   
-  // Load dark mode setting
   if (localStorage.getItem('darkMode') === 'enabled') {
     document.documentElement.classList.add('dark');
   }
@@ -169,12 +195,33 @@ function sortItems() {
   renderList();
 }
 
-function exportList() {
+function shareOrExportList() {
   if (items.length === 0) return alert("Your list is empty!");
-  const text = items.map(i => `${i.checked ? '[x]' : '[ ]'} ${i.name} (${formatQty(i.qty)}) - Layer: ${i.category}`).join('\n');
-  navigator.clipboard.writeText(text).then(() => {
-    alert("List copied to clipboard!");
-  });
+
+  // 1. Create JSON stringified array of items
+  const compactData = items.map(({name, qty, category, checked}) => ({name, qty, category, checked}));
+  const jsonString = JSON.stringify(compactData);
+  
+  // 2. Base64 encode it so the payload safely sits inside a URL query string
+  const base64Data = btoa(unescape(encodeURIComponent(jsonString)));
+  const finalShareUrl = `${BASE_URL}?list=${base64Data}`;
+
+  // 3. Environment Conditional Execution (Mobile vs Computer)
+  if (navigator.share) {
+    // Mobile devices (iOS/Android): Opens system share drawer
+    navigator.share({
+      title: 'My Shopping List',
+      text: 'Check out my shopping list!',
+      url: finalShareUrl
+    }).catch(err => console.log("Error sharing:", err));
+  } else {
+    // Computers/Laptops: Automatically copies the share link to clipboard
+    navigator.clipboard.writeText(finalShareUrl).then(() => {
+      alert("Shareable list link copied to clipboard! Send it to anyone to load your list.");
+    }).catch(err => {
+      alert("Failed to copy automatically. Here is the link:\n\n" + finalShareUrl);
+    });
+  }
 }
 
 function toggleDarkMode() {
@@ -198,11 +245,9 @@ function renderList() {
   const statsBar = document.getElementById('stats-bar');
   const progressText = document.getElementById('progress-text');
 
-  // Handle Visibility States
   emptyMsg.classList.toggle('hidden', items.length > 0);
   statsBar.classList.toggle('hidden', items.length === 0);
 
-  // Update Status Text
   const checkedCount = items.filter(i => i.checked).length;
   progressText.textContent = `${checkedCount} of ${items.length} item${items.length === 1 ? '' : 's'} checked`;
 
@@ -214,7 +259,6 @@ function renderList() {
     div.className = `flex flex-col sm:flex-row sm:items-center gap-3 p-3.5 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-sm transition-all ${item.checked ? 'checked-item bg-slate-50/50 dark:bg-slate-800/40' : ''}`;
     
     if (isEditing) {
-      // Inline Editing DOM Template
       div.innerHTML = `
         <div class="flex-1 grid grid-cols-12 gap-2 w-full">
           <input id="edit-name-${item.id}" type="text" value="${item.name}" class="col-span-12 sm:col-span-5 bg-slate-50 dark:bg-slate-700 border border-slate-300 dark:border-slate-600 rounded px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500">
@@ -227,7 +271,6 @@ function renderList() {
         </div>
       `;
     } else {
-      // Standard Viewing DOM Template
       div.innerHTML = `
         <div class="flex items-center gap-3 flex-1 min-w-0">
           <input type="checkbox" ${item.checked ? 'checked' : ''} onchange="toggleItem(${item.id})" class="w-5 h-5 rounded accent-teal-600 dark:accent-teal-500 cursor-pointer shrink-0">
@@ -252,6 +295,7 @@ function renderList() {
 
 document.addEventListener('DOMContentLoaded', () => {
   loadFromStorage();
+  checkUrlForSharedList(); // Checks URL parameters on page load
   renderList();
 });
 </script>
