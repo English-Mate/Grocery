@@ -5,6 +5,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Shopping List Builder</title>
   <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+    }
+  </script>
   <script src="https://cdn.jsdelivr.net/npm/lucide@0.263.0/dist/umd/lucide.min.js"></script>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
   <style>
@@ -21,18 +26,17 @@
       <p class="text-slate-500 dark:text-slate-400">Add, edit, sort, and share your lists instantly</p>
     </header>
 
-    <div class="flex flex-wrap items-center justify-between gap-3 mb-6 bg-white dark:bg-slate-800 p-4 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700">
+    <div class="flex flex-wrap items-center justify-between gap-3 mb-6 bg-white dark:bg-slate-800 p-4 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 transition-colors">
       <div class="flex gap-2">
         <button onclick="toggleDarkMode()" id="theme-btn" class="px-3 py-2 text-sm font-medium bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:hover:bg-slate-600 rounded-lg flex items-center gap-2 transition-colors">
-          <i data-lucide="moon" class="w-4 h-4"></i> <span>Dark Mode</span>
-        </button>
+          </button>
         <button onclick="shareOrExportList()" class="px-3 py-2 text-sm font-medium bg-teal-600 hover:bg-teal-700 text-white rounded-lg flex items-center gap-2 transition-colors">
           <i data-lucide="share-2" class="w-4 h-4"></i> Share / Export
         </button>
       </div>
       
       <div class="flex items-center gap-2">
-        <select id="sort-select" onchange="sortItems()" class="bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500">
+        <select id="sort-select" onchange="sortItems()" class="bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 transition-colors text-slate-800 dark:text-slate-100">
           <option value="default">Sort by…</option>
           <option value="alpha">Alphabetical</option>
           <option value="checked">Unchecked First</option>
@@ -46,15 +50,15 @@
       <span id="clear-all-link" onclick="clearAll()" class="text-red-500 hover:text-red-600 cursor-pointer font-medium flex items-center gap-1"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i> Clear All</span>
     </div>
 
-    <form id="add-form" class="grid grid-cols-12 gap-2 mb-6 bg-white dark:bg-slate-800 p-3 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700" onsubmit="addItem(event)">
+    <form id="add-form" class="grid grid-cols-12 gap-2 mb-6 bg-white dark:bg-slate-800 p-3 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 transition-colors" onsubmit="addItem(event)">
       <div class="col-span-12 sm:col-span-5">
-        <input id="name-input" type="text" placeholder="Item name..." class="w-full bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500" required>
+        <input id="name-input" type="text" placeholder="Item name..." class="w-full bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 transition-colors text-slate-800 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500" required>
       </div>
       <div class="col-span-5 sm:col-span-3">
-        <input id="qty-input" type="number" placeholder="Qty" step="0.01" min="0.01" class="w-full bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500">
+        <input id="qty-input" type="number" placeholder="Qty" step="0.01" min="0.01" class="w-full bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 transition-colors text-slate-800 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500">
       </div>
       <div class="col-span-7 sm:col-span-3">
-        <input id="cat-input" type="text" placeholder="Category" class="w-full bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500">
+        <input id="cat-input" type="text" placeholder="Category" class="w-full bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 transition-colors text-slate-800 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500">
       </div>
       <button type="submit" class="col-span-12 sm:col-span-1 bg-teal-600 hover:bg-teal-700 text-white font-medium rounded-lg p-2 transition-colors flex items-center justify-center">
         <i data-lucide="plus" class="w-5 h-5"></i>
@@ -63,7 +67,7 @@
 
     <div id="item-list" class="space-y-2.5"></div>
     
-    <div id="empty-msg" class="text-center py-12 bg-white dark:bg-slate-800 rounded-xl border border-dashed border-slate-300 dark:border-slate-700">
+    <div id="empty-msg" class="text-center py-12 bg-white dark:bg-slate-800 rounded-xl border border-dashed border-slate-300 dark:border-slate-700 transition-colors">
       <i data-lucide="shopping-basket" class="w-12 h-12 mx-auto mb-3 text-slate-400 opacity-60"></i>
       <p class="italic text-slate-400">Your shopping list is empty</p>
     </div>
@@ -150,7 +154,6 @@ function checkUrlForSharedList() {
   
   if (dataParam) {
     try {
-      // Decode base64 to prevent URL breaks from special characters
       const jsonString = atob(dataParam);
       const parsedItems = JSON.parse(jsonString);
       
@@ -159,8 +162,6 @@ function checkUrlForSharedList() {
           items = parsedItems;
           nextId = Math.max(...items.map(i => i.id), 0) + 1;
           saveToStorage();
-          
-          // Clear query params clean up the URL bar
           window.history.replaceState({}, document.title, window.location.pathname);
         }
       }
@@ -177,8 +178,11 @@ function loadFromStorage() {
     nextId = Math.max(...items.map(i => i.id), 0) + 1;
   }
   
+  // Apply dark mode on initial load if saved
   if (localStorage.getItem('darkMode') === 'enabled') {
     document.documentElement.classList.add('dark');
+  } else {
+    document.documentElement.classList.remove('dark');
   }
   updateThemeButton();
 }
@@ -187,6 +191,7 @@ function formatQty(n) {
   return n % 1 === 0 ? n.toString() : n.toFixed(2).replace(/0+$/, '').replace(/\.$/, '');
 }
 
+// Sort items functionality
 function sortItems() {
   const sortBy = document.getElementById('sort-select').value;
   if (sortBy === 'alpha') items.sort((a,b) => a.name.localeCompare(b.name));
@@ -198,24 +203,18 @@ function sortItems() {
 function shareOrExportList() {
   if (items.length === 0) return alert("Your list is empty!");
 
-  // 1. Create JSON stringified array of items
   const compactData = items.map(({name, qty, category, checked}) => ({name, qty, category, checked}));
   const jsonString = JSON.stringify(compactData);
-  
-  // 2. Base64 encode it so the payload safely sits inside a URL query string
   const base64Data = btoa(unescape(encodeURIComponent(jsonString)));
   const finalShareUrl = `${BASE_URL}?list=${base64Data}`;
 
-  // 3. Environment Conditional Execution (Mobile vs Computer)
   if (navigator.share) {
-    // Mobile devices (iOS/Android): Opens system share drawer
     navigator.share({
       title: 'My Shopping List',
       text: 'Check out my shopping list!',
       url: finalShareUrl
     }).catch(err => console.log("Error sharing:", err));
   } else {
-    // Computers/Laptops: Automatically copies the share link to clipboard
     navigator.clipboard.writeText(finalShareUrl).then(() => {
       alert("Shareable list link copied to clipboard! Send it to anyone to load your list.");
     }).catch(err => {
@@ -225,6 +224,7 @@ function shareOrExportList() {
 }
 
 function toggleDarkMode() {
+  // Toggle the dark class on HTML element (crucial for Tailwind)
   const isDark = document.documentElement.classList.toggle('dark');
   localStorage.setItem('darkMode', isDark ? 'enabled' : 'disabled');
   updateThemeButton();
@@ -232,6 +232,7 @@ function toggleDarkMode() {
 
 function updateThemeButton() {
   const btn = document.getElementById('theme-btn');
+  if (!btn) return;
   const isDark = document.documentElement.classList.contains('dark');
   btn.innerHTML = isDark 
     ? `<i data-lucide="sun" class="w-4 h-4 text-amber-400"></i> Light Mode` 
@@ -261,9 +262,9 @@ function renderList() {
     if (isEditing) {
       div.innerHTML = `
         <div class="flex-1 grid grid-cols-12 gap-2 w-full">
-          <input id="edit-name-${item.id}" type="text" value="${item.name}" class="col-span-12 sm:col-span-5 bg-slate-50 dark:bg-slate-700 border border-slate-300 dark:border-slate-600 rounded px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500">
-          <input id="edit-qty-${item.id}" type="number" step="0.01" value="${item.qty}" class="col-span-4 sm:col-span-3 bg-slate-50 dark:bg-slate-700 border border-slate-300 dark:border-slate-600 rounded px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500">
-          <input id="edit-cat-${item.id}" type="text" value="${item.category}" class="col-span-8 sm:col-span-4 bg-slate-50 dark:bg-slate-700 border border-slate-300 dark:border-slate-600 rounded px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500">
+          <input id="edit-name-${item.id}" type="text" value="${item.name}" class="col-span-12 sm:col-span-5 bg-slate-50 dark:bg-slate-700 border border-slate-300 dark:border-slate-600 text-slate-800 dark:text-slate-100 rounded px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500">
+          <input id="edit-qty-${item.id}" type="number" step="0.01" value="${item.qty}" class="col-span-4 sm:col-span-3 bg-slate-50 dark:bg-slate-700 border border-slate-300 dark:border-slate-600 text-slate-800 dark:text-slate-100 rounded px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500">
+          <input id="edit-cat-${item.id}" type="text" value="${item.category}" class="col-span-8 sm:col-span-4 bg-slate-50 dark:bg-slate-700 border border-slate-300 dark:border-slate-600 text-slate-800 dark:text-slate-100 rounded px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500">
         </div>
         <div class="flex items-center gap-2 justify-end mt-2 sm:mt-0">
           <button onclick="saveInlineEdit(${item.id})" class="text-teal-600 hover:text-teal-700 p-1"><i data-lucide="check" class="w-5 h-5"></i></button>
@@ -295,7 +296,7 @@ function renderList() {
 
 document.addEventListener('DOMContentLoaded', () => {
   loadFromStorage();
-  checkUrlForSharedList(); // Checks URL parameters on page load
+  checkUrlForSharedList();
   renderList();
 });
 </script>
